@@ -9,7 +9,7 @@ public interface EmployeeDao {
     void add(Employee employee) throws SQLException;
     Employee readById(long id);
     List<Employee> findAll();
-    void updateEmployeeById(long id,Employee employee);
+    void updateEmployeeById(long id,String name);
     void deleteById(long id);
 
 }

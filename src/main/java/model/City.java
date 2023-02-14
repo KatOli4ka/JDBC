@@ -45,6 +45,6 @@ public class City {
 
     @Override
     public String toString() {
-        return String.format("id города: %d, Название города: %s%n",cityId, cityName) ;
+        return cityId +", cityName = " + cityName;
     }
 }

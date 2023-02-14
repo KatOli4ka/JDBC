@@ -93,7 +93,7 @@ public class Employee {
 
     @Override
     public String toString() {
-        return String.format("id: %d, Имя: %s, Фамилия: %s, Пол: %s, Возраст: %d, id города: %d%n",
-                id, firstName,lastName,gender,age,cityId);
+        return "id = " + id +", firstName = " + firstName +", lastName = " + lastName +", gender = " + gender  +
+                ", age = " + age +", cityId = " + cityId ;
     }
 }

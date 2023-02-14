@@ -9,16 +9,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class EmployeeDaoImpl implements EmployeeDao {
-    private static String FIND_ALL = "SELECT * FROM employee";
+    private static String FIND_ALL = "SELECT * FROM employee INNER JOIN city ON employee.city_id=city.city_id";
     private static String INSERT = "INSERT INTO employee (id, first_name, last_name, gender, age, city_id) VALUES ((?), (?), (?), (?), (?), (?))";
-    private static String INNER = "SELECT * FROM employee INNER JOIN ";
+    private static String FIND_BY_ID = "SELECT * FROM employee INNER JOIN city ON employee.city_id=city.city_id AND employee.id=(?)";
+    private static String UPDATE = "UPDATE employee SET first_name = (?) WHERE id=(?)";
+    private static String DELETE = "DELETE FROM employee WHERE id=(?)";
+
 
     @Override
     public void add(Employee employee) throws SQLException {
         try (Connection connection = ConnectionManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(
                      INSERT)) {
-
             statement.setLong(1, employee.getId());
             statement.setString(2, employee.getFirstName());
             statement.setString(3, employee.getLastName());
@@ -33,40 +35,25 @@ public class EmployeeDaoImpl implements EmployeeDao {
 
     @Override
     public Employee readById(long id) {
-        return null;
+        Employee employee = new Employee();
+        try (Connection connection = ConnectionManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(FIND_BY_ID)) {
+            statement.setLong(1, id);
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                employee.setId(Long.parseLong(resultSet.getString("id")));
+                employee.setFirstName(resultSet.getString("first_name"));
+                employee.setLastName(resultSet.getString("last_name"));
+                employee.setGender(resultSet.getString("gender"));
+                employee.setAge(Integer.parseInt(resultSet.getString("age")));
+                employee.setCityId(new City(resultSet.getLong("city_id"),
+                        resultSet.getString("city_name")));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return employee;
     }
-
-
-//    @Override
-//    public Employee readById(long id) {
-//        Employee employee=new Employee();
-//        try (Connection connection = ConnectionManager.getConnection();
-//                PreparedStatement statement = connection.prepareStatement(
-//                "SELECT * FROM book INNER JOIN author ON book.author_id=author.author_id AND book_id=(?)")) {
-//
-//            // Подставляем значение вместо wildcard
-//            statement.setInt(1, id);
-//
-//            // Делаем запрос к базе и результат кладем в ResultSet
-//            ResultSet resultSet = statement.executeQuery();
-//
-//            // Методом next проверяем есть ли следующий элемент в resultSet
-//            // и одновременно переходим к нему, если таковой есть
-//            while(resultSet.next()) {
-//
-//                // С помощью методов getInt и getString получаем данные из resultSet
-//                // и присваиваем их полим объекта
-//                book.setId(Integer.parseInt(resultSet.getString("book_id")));
-//                book.setTitle(resultSet.getString("title"));
-//                book.setAuthor(new Author(resultSet.getInt("author_id"),
-//                        resultSet.getString("name_author")));
-//                book.setAmount(Integer.parseInt(resultSet.getString("amount")));
-//            }
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//        }
-//        return book;
-//    }
 
     @Override
     public List<Employee> findAll() {
@@ -75,15 +62,14 @@ public class EmployeeDaoImpl implements EmployeeDao {
              PreparedStatement statement = connection.prepareStatement(FIND_ALL);
              ResultSet resultSet = statement.executeQuery()) {
             while (resultSet.next()) {
-                Employee employee = new Employee(
-                        resultSet.getLong("id"),
-                resultSet.getString("firstName"),
-                resultSet.getString("lastName"),
-                resultSet.getString("gender"),
-                resultSet.getInt("age"),
-                new City(resultSet.getLong("cityId"))
-                );
-                employees.add(employee);
+                long id = Long.parseLong(resultSet.getString("id"));
+                String firstName = resultSet.getString("first_name");
+                String lastName = resultSet.getString("last_name");
+                String gender = resultSet.getString("gender");
+                int age = Integer.parseInt(resultSet.getString("age"));
+                City cityId = new City(resultSet.getLong("city_id"),
+                        resultSet.getString("city_name"));
+                employees.add(new Employee(id, firstName, lastName, gender, age, cityId));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -92,12 +78,26 @@ public class EmployeeDaoImpl implements EmployeeDao {
     }
 
     @Override
-    public void updateEmployeeById(long id, Employee employee) {
-
+    public void updateEmployeeById(long id, String name) {
+        try (Connection connection = ConnectionManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(UPDATE)) {
+            statement.setLong(2, id);
+            statement.setString(1, name);
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void deleteById(long id) {
+        try (Connection connection = ConnectionManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(DELETE)) {
+            statement.setLong(1, id);
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
 
     }
 
